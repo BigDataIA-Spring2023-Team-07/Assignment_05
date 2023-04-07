@@ -10,6 +10,10 @@ import re
 import openai
 import googleapiclient.discovery
 from googleapiclient.errors import HttpError
+from pytube import YouTube
+import os
+from youtube_dl import YoutubeDL
+
 
 openai.api_key = ''
 DEVELOPER_KEY = ""
@@ -28,8 +32,6 @@ def transcribe_audio(audio, lang='English'):
   
   return transcript_seg
 
-transcript_seg=transcribe_audio('Joe Asks Jorge Masvidal About Colby Covington Conflict.mp3')
-transcript_seg = "".join(transcript_seg)
 
 def chat(inp, ques, message_history, role="user"):
 
@@ -158,32 +160,35 @@ def convert_text(text):
   return names, start_times, end_times
 
 # Task 2:  summarize the video
-num_tokens = count_tokens(transcript_seg)
-if num_tokens > 2000:
-  reply = split_tokens_chat(transcript_seg, 'summarize')
+def summarize_video(transcript_seg):
+  num_tokens = count_tokens(transcript_seg)
+  if num_tokens > 2000:
+    reply = split_tokens_chat(transcript_seg, 'summarize')
 
-else:
-  message_history = []
-  # reply = chat(transcript_seg, "What are all the main topics and their corresponding start and end time stamps in the text?",message_history )
-  reply = chat(transcript_seg, "Can you summarize this text?",message_history )
+  else:
+    message_history = []
+    # reply = chat(transcript_seg, "What are all the main topics and their corresponding start and end time stamps in the text?",message_history )
+    reply = chat(transcript_seg, "Can you summarize this text?",message_history )
+    return reply
 
 # Task 3: Main topics and their timestamps
-num_tokens = count_tokens(transcript_seg)
-if num_tokens > 2000:
-  reply = split_tokens_chat(transcript_seg, 'main_topics')
+def main_topics(transcript_seg):
+  num_tokens = count_tokens(transcript_seg)
+  if num_tokens > 2000:
+    reply = split_tokens_chat(transcript_seg, 'main_topics')
 
-else:
-  message_history = []
-  reply = chat(transcript_seg, "What are all the main topics and their corresponding start and end time stamps in the text? \
-   follow this format: Main topic name followed by a comma then start time followed by a comma  not hyphen then end time followed by ; not new line dont use any other characters",message_history )
+  else:
+    message_history = []
+    reply = chat(transcript_seg, "What are all the main topics and their corresponding start and end time stamps in the text? \
+    follow this format: Main topic name followed by a comma then start time followed by a comma  not hyphen then end time followed by ; not new line dont use any other characters",message_history )
 
-reply = reply.replace('\n', "")
-name, start_time, end_time = convert_text(reply)
+  reply = reply.replace('\n', "")
+  name, start_time, end_time = convert_text(reply)
+  return name, start_time, end_time
 
 
 
 #Task 4: Sentiment analysis
-
 def sentiment_analysis(video_url):
 
   YOUTUBE_API_SERVICE_NAME = "youtube"
@@ -217,5 +222,5 @@ def sentiment_analysis(video_url):
 
   return message_history[1]['content'].strip()
 
-reply = sentiment_analysis('https://www.youtube.com/watch?v=SzGEfYh9ITQ&ab_channel=Spline')
+
 
